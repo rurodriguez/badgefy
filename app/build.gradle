@@ -1,0 +1,117 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        applicationId "com.ruro.badgefy"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    productFlavors {
+        dev {
+            applicationId "com.ruro.badgefy.dev"
+        }
+
+        prod {
+            applicationId "com.ruro.badgefy"
+        }
+    }
+}
+
+/*
+*
+* creating the icon overlay task for each build variant
+*
+* */
+def versionBuild = 1 // bump for dogfood builds, public betas, etc.
+def createdTasks = []
+android.applicationVariants.all { variant ->
+    def buildType = variant.buildType.name
+    def flavor = ""
+    variant.productFlavors.each { variantFlavor ->
+        flavor = variantFlavor.name
+        def taskName = "addIconOverlay${flavor}${buildType}Task"
+
+        // create the task only if it has not been created before
+        if (!createdTasks.contains(taskName)) {
+            createdTasks.add taskName
+            tasks.create([name: taskName, type: Exec], {
+                def cornerBackgroundColor
+                def textColor
+                def shadowColor
+
+                if (flavor.equals("dev")) {
+                    cornerBackgroundColor = "#f8e543"
+                    textColor = "#000000"
+                    shadowColor = "#eeeeee"
+
+                }
+                else {
+                    cornerBackgroundColor = "#a5238f"
+                    textColor = "#ffffff"
+                    shadowColor = "#eeeeee"
+                }
+
+                commandLine '/bin/bash', "./add_icon_overlay.sh", "${versionBuild}", "${flavor}", "${buildType}", "${cornerBackgroundColor}", "${textColor}", "${shadowColor}"
+            })
+        }
+    }
+}
+
+/*
+* processDevDebugResources depends on addIconOverlayDevDebugTask
+* addIconOverlayDevDebugTask depends on mergeDevDebugResources
+*
+* this is the only way I found where the launcher icons are modfied
+* BEFORE processed (processXXResources) and AFTER created (mergeXXResources)
+* */
+
+tasks.whenTaskAdded { task ->
+    def taskName = task.name
+    def buildType = ""
+    def flavor = ""
+    def buildVariant = ""
+    if (taskName.startsWith("process") && taskName.endsWith("Resources") && !taskName.contains("Release")) {
+        buildVariant = taskName.replace("process", "").toLowerCase();
+        buildVariant = buildVariant.replace("Resources", "")
+    }
+    else if (taskName.startsWith("merge") && taskName.endsWith("Resources")) {
+        buildVariant = taskName.replace("merge", "").toLowerCase();
+        buildVariant = buildVariant.replace("Resources", "")
+    }
+
+    android.applicationVariants.all { variant ->
+        if (buildVariant.contains(variant.buildType.name)) {
+            buildType = variant.buildType.name
+            variant.productFlavors.each { variantFlavor ->
+                if (buildVariant.contains(variantFlavor.name)) {
+                    flavor = variantFlavor.name
+                    def t = tasks["addIconOverlay${flavor}${buildType}Task"]
+                    if (taskName.startsWith("process")) {
+                        task.dependsOn t
+                    }
+                    else {
+                        t.dependsOn task
+                    }
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:23.4.0'
+}
