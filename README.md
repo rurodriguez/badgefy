@@ -6,7 +6,7 @@ Example project with a couple of scripts (gradle / bash), which allow you to ins
 
 This script should works both Linux and Mac OS (sorry Windows Users!)
 
-**Prerrequisites**
+**Prerequisites**
  * imagemagick
  * ghostscript
 
