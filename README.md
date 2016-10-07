@@ -28,7 +28,7 @@ The font type you wish to use to render the text. You can change it if you wish,
 
 *app build.gradle*
 
-This files contains the tasks needed to call *add_icon_overlay.sh* in the right place. These are the neede tasks/defs to make it works
+This files contains the tasks needed to call *add_icon_overlay.sh* in the right place. These are the needed tasks/defs to make it works
 
 ```gradle
 /*
