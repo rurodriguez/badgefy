@@ -16,6 +16,11 @@ $ brew update
 $ brew install imagemagick ghostscript
 ```
 
+**Gradle 3.0**
+
+In order to work in Gradle 3.0 it is necessary to **disable AAPT2**.</br>
+https://developer.android.com/studio/build/gradle-plugin-3-0-0.html
+
 **Key files**
 
 *add_icon_overlay.sh*
