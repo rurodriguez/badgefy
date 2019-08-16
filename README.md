@@ -16,11 +16,6 @@ $ brew update
 $ brew install imagemagick ghostscript
 ```
 
-**Gradle 3.0**
-
-In order to work in Gradle 3.0 it is necessary to **disable AAPT2**.</br>
-https://developer.android.com/studio/build/gradle-plugin-3-0-0.html
-
 **Key files**
 
 *add_icon_overlay.sh*
@@ -41,7 +36,7 @@ This files contains the tasks needed to call *add_icon_overlay.sh* in the right 
 * creating the icon overlay task for each build variant
 *
 * */
-def versionBuild = 1 // bump for dogfood builds, public betas, etc.
+def versionBuild = 1
 def createdTasks = []
 android.applicationVariants.all { variant ->
     def buildType = variant.buildType.name
@@ -77,11 +72,10 @@ android.applicationVariants.all { variant ->
 }
 
 /*
-* processDevDebugResources depends on addIconOverlayDevDebugTask
-* addIconOverlayDevDebugTask depends on mergeDevDebugResources
+* gnerateDevDebugResources depends on addIconOverlayDevDebugTask
 *
 * this is the only way I found where the launcher icons are modfied
-* BEFORE processed (processXXResources) and AFTER created (mergeXXResources)
+* BEFORE processed (generateXXResources)
 * */
 
 tasks.whenTaskAdded { task ->
@@ -89,12 +83,8 @@ tasks.whenTaskAdded { task ->
     def buildType = ""
     def flavor = ""
     def buildVariant = ""
-    if (taskName.startsWith("process") && taskName.endsWith("Resources") && !taskName.contains("Release")) {
-        buildVariant = taskName.replace("process", "").toLowerCase();
-        buildVariant = buildVariant.replace("Resources", "")
-    }
-    else if (taskName.startsWith("merge") && taskName.endsWith("Resources")) {
-        buildVariant = taskName.replace("merge", "").toLowerCase();
+    if (taskName.startsWith("generate") && taskName.endsWith("Resources") && !taskName.contains("Release")) {
+        buildVariant = taskName.replace("generate", "").toLowerCase()
         buildVariant = buildVariant.replace("Resources", "")
     }
 
@@ -105,11 +95,8 @@ tasks.whenTaskAdded { task ->
                 if (buildVariant.contains(variantFlavor.name)) {
                     flavor = variantFlavor.name
                     def t = tasks["addIconOverlay${flavor}${buildType}Task"]
-                    if (taskName.startsWith("process")) {
+                    if (taskName.startsWith("generate")) {
                         task.dependsOn t
-                    }
-                    else {
-                        t.dependsOn task
                     }
                 }
             }

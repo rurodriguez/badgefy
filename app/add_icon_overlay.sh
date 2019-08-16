@@ -64,10 +64,11 @@ function modifyIcon() {
 }
 
 function generateIcon () {
+  echo "searching for launcher icons..."
   cd "build/intermediates/res/merged/${flavor}/${buildType}"
 
-  # buscar y procesar
-  for icon in `find . -name ic_launcher.png`; do
+  # find and process
+  for icon in `find . -name *ic*launcher*.png`; do
     echo "processing ${icon}"
     WIDTH=$(${IDENTIFY} -format %w "${icon}")
     modifyIcon $WIDTH $icon
